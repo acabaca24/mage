@@ -36,7 +36,7 @@ public enum CardRepository {
     // raise this if db structure was changed
     private static final long CARD_DB_VERSION = 52;
     // raise this if new cards were added to the server
-    private static final long CARD_CONTENT_VERSION = 231;
+    private static final long CARD_CONTENT_VERSION = 232;
     private Dao<CardInfo, Object> cardDao;
     private Set<String> classNames;
     private final RepositoryEventSource eventSource = new RepositoryEventSource();
@@ -406,14 +406,21 @@ public enum CardRepository {
     }
 
     public CardInfo findPreferedCoreExpansionCard(String name, boolean caseInsensitive, String preferedSetCode) {
-
         List<CardInfo> cards;
         if (caseInsensitive) {
             cards = findCardsCaseInsensitive(name);
         } else {
             cards = findCards(name);
         }
+        return findPreferedOrLatestCard(cards, preferedSetCode);
+    }
 
+    public CardInfo findPreferedCoreExpansionCardByClassName(String canonicalClassName, String preferedSetCode) {
+        List<CardInfo> cards = findCardsByClass(canonicalClassName);
+        return findPreferedOrLatestCard(cards, preferedSetCode);
+    }
+
+    private CardInfo findPreferedOrLatestCard(List<CardInfo> cards, String preferedSetCode) {
         if (!cards.isEmpty()) {
             Date lastReleaseDate = null;
             Date lastExpansionDate = null;
@@ -463,6 +470,16 @@ public enum CardRepository {
         try {
             QueryBuilder<CardInfo, Object> queryBuilder = cardDao.queryBuilder();
             queryBuilder.where().eq("name", new SelectArg(name));
+            return cardDao.query(queryBuilder.prepare());
+        } catch (SQLException ex) {
+        }
+        return Collections.emptyList();
+    }
+
+    public List<CardInfo> findCardsByClass(String canonicalClassName) {
+        try {
+            QueryBuilder<CardInfo, Object> queryBuilder = cardDao.queryBuilder();
+            queryBuilder.where().eq("className", new SelectArg(canonicalClassName));
             return cardDao.query(queryBuilder.prepare());
         } catch (SQLException ex) {
         }

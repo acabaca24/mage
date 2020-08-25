@@ -683,6 +683,7 @@ public abstract class CardImpl extends MageObjectImpl implements Card {
 
     @Override
     public final Card getSecondCardFace() {
+        // init second side card on first call
         if (secondSideCardClazz == null && secondSideCard == null) {
             return null;
         }
@@ -691,14 +692,15 @@ public abstract class CardImpl extends MageObjectImpl implements Card {
             return secondSideCard;
         }
 
-        List<ExpansionSet.SetCardInfo> cardInfo = Sets.findSet(expansionSetCode).findCardInfoByClass(secondSideCardClazz);
-        if (cardInfo.isEmpty()) {
+        // must be non strict search in any sets, not one set
+        // example: if set contains only one card side
+        // method used in cards database creating, so can't use repository here
+        ExpansionSet.SetCardInfo info = Sets.findCardByClass(secondSideCardClazz, expansionSetCode);
+        if (info == null) {
             return null;
         }
-
-        ExpansionSet.SetCardInfo info = cardInfo.get(0);
-        return secondSideCard = createCard(secondSideCardClazz,
-                new CardSetInfo(info.getName(), expansionSetCode, info.getCardNumber(), info.getRarity(), info.getGraphicInfo()));
+        secondSideCard = createCard(secondSideCardClazz, new CardSetInfo(info.getName(), expansionSetCode, info.getCardNumber(), info.getRarity(), info.getGraphicInfo()));
+        return secondSideCard;
     }
 
     @Override
@@ -971,5 +973,5 @@ public abstract class CardImpl extends MageObjectImpl implements Card {
             }
         }
         return false;
-    }   
+    }
 }

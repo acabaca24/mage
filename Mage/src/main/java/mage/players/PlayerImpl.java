@@ -3,7 +3,6 @@ package mage.players;
 import com.google.common.collect.ImmutableMap;
 import mage.ConditionalMana;
 import mage.MageObject;
-import mage.MageObjectReference;
 import mage.Mana;
 import mage.abilities.*;
 import mage.abilities.ActivatedAbility.ActivationStatus;
@@ -354,10 +353,10 @@ public abstract class PlayerImpl implements Player, Serializable {
         this.clearCastSourceIdManaCosts();
         this.castSourceIdWithAlternateMana.addAll(player.getCastSourceIdWithAlternateMana());
         for (Entry<UUID, ManaCosts<ManaCost>> entry : player.getCastSourceIdManaCosts().entrySet()) {
-            this.castSourceIdManaCosts.put(entry.getKey(), entry.getValue().copy());
+            this.castSourceIdManaCosts.put(entry.getKey(), (entry.getValue() == null ? null : entry.getValue().copy()));
         }
         for (Entry<UUID, Costs<Cost>> entry : player.getCastSourceIdCosts().entrySet()) {
-            this.castSourceIdCosts.put(entry.getKey(), entry.getValue().copy());
+            this.castSourceIdCosts.put(entry.getKey(), (entry.getValue() == null ? null : entry.getValue().copy()));
         }
 
         this.phyrexianColors = player.getPhyrexianColors() != null ? player.getPhyrexianColors().copy() : null;

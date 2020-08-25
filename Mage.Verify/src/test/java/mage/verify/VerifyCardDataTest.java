@@ -7,7 +7,6 @@ import mage.abilities.effects.keyword.ScryEffect;
 import mage.abilities.keyword.MenaceAbility;
 import mage.abilities.keyword.MultikickerAbility;
 import mage.cards.*;
-import mage.cards.basiclands.BasicLand;
 import mage.cards.decks.DeckCardLists;
 import mage.cards.decks.importer.DeckImporter;
 import mage.cards.repository.CardInfo;
@@ -40,12 +39,9 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -57,9 +53,6 @@ public class VerifyCardDataTest {
 
     private static final String FULL_ABILITIES_CHECK_SET_CODE = "THB"; // check all abilities and output cards with wrong abilities texts;
     private static final boolean AUTO_FIX_SAMPLE_DECKS = false; // debug only: fix sample decks if it contains errors like wrong card numbers
-
-    // right now this is very noisy, and not useful enough to make any assertions on
-    private static final boolean CHECK_SOURCE_TOKENS = false;
 
     private static final HashMap<String, Set<String>> skipCheckLists = new HashMap<>();
     private static final Set<String> subtypesToIgnore = new HashSet<>();
@@ -74,8 +67,8 @@ public class VerifyCardDataTest {
     private static final String SKIP_LIST_DOUBLE_RARE = "DOUBLE_RARE";
     private static final String SKIP_LIST_UNSUPPORTED_SETS = "UNSUPPORTED_SETS";
     private static final String SKIP_LIST_SCRYFALL_DOWNLOAD_SETS = "SCRYFALL_DOWNLOAD_SETS";
+    private static final String SKIP_LIST_WRONG_CARD_NUMBERS = "WRONG_CARD_NUMBERS";
     private static final String SKIP_LIST_SAMPLE_DECKS = "SAMPLE_DECKS";
-    private static final Pattern SHORT_JAVA_STRING = Pattern.compile("(?<=\")[A-Z][a-z]+(?=\")");
 
     static {
         // skip lists for checks (example: unstable cards with same name may have different stats)
@@ -191,9 +184,20 @@ public class VerifyCardDataTest {
         skipListAddName(SKIP_LIST_UNSUPPORTED_SETS, "AMH1"); // Modern Horizons Art Series
         skipListAddName(SKIP_LIST_UNSUPPORTED_SETS, "PTG"); // Ponies: The Galloping
 
+        // wrond card numbers skip list
+        skipListCreate(SKIP_LIST_WRONG_CARD_NUMBERS);
+        skipListAddName(SKIP_LIST_WRONG_CARD_NUMBERS, "SWS"); // Star Wars
+        skipListAddName(SKIP_LIST_WRONG_CARD_NUMBERS, "POR"); // Portal, TODO: remove after bug fixed https://github.com/mtgjson/mtgjson/issues/660
+        skipListAddName(SKIP_LIST_WRONG_CARD_NUMBERS, "UND"); // un-sets don't have full implementation of card variations
+        skipListAddName(SKIP_LIST_WRONG_CARD_NUMBERS, "UST"); // un-sets don't have full implementation of card variations
+        skipListAddName(SKIP_LIST_WRONG_CARD_NUMBERS, "SOI", "Tamiyo's Journal"); // not all variations implemented
+
+
         // scryfall download sets (missing from scryfall website)
         skipListCreate(SKIP_LIST_SCRYFALL_DOWNLOAD_SETS);
         skipListAddName(SKIP_LIST_SCRYFALL_DOWNLOAD_SETS, "SWS"); // Star Wars
+        //skipListAddName(SKIP_LIST_SCRYFALL_DOWNLOAD_SETS, "8EB"); // Eighth Edition Box - inner xmage set, split from 8ED
+        //skipListAddName(SKIP_LIST_SCRYFALL_DOWNLOAD_SETS, "9EB"); // Ninth Edition Box - inner xmage set, split from 9ED
 
         // sample decks checking - some decks can contains unimplemented cards, so ignore it
         // file name must be related to sample-decks folder
@@ -247,12 +251,11 @@ public class VerifyCardDataTest {
         int cardIndex = 0;
         for (Card card : CardScanner.getAllCards()) {
             cardIndex++;
-            Set<String> tokens = findSourceTokens(card.getClass());
             if (card.isSplitCard()) {
-                check(((SplitCard) card).getLeftHalfCard(), null, cardIndex);
-                check(((SplitCard) card).getRightHalfCard(), null, cardIndex);
+                check(((SplitCard) card).getLeftHalfCard(), cardIndex);
+                check(((SplitCard) card).getRightHalfCard(), cardIndex);
             } else {
-                check(card, tokens, cardIndex);
+                check(card, cardIndex);
             }
         }
 
@@ -545,26 +548,178 @@ public class VerifyCardDataTest {
     }
 
     @Test
-    public void test_checkMissingScryfallSettings() {
+    public void test_checkMissingSecondSideCardsInSets() {
+        Collection<String> errorsList = new ArrayList<>();
+
+        // CHECK: if card have second side (flip, transform) then it must have all sides in that set
+        for (ExpansionSet set : Sets.getInstance().values()) {
+            for (ExpansionSet.SetCardInfo info : set.getSetCardInfo()) {
+                CardInfo cardInfo = CardRepository.instance.findCardsByClass(info.getCardClass().getCanonicalName()).stream().findFirst().orElse(null);
+                Assert.assertNotNull(cardInfo);
+
+                Card card = cardInfo.getCard();
+                Card secondCard = card.getSecondCardFace();
+                if (secondCard != null) {
+                    if (set.findCardInfoByClass(secondCard.getClass()).isEmpty()) {
+                        errorsList.add("Error: missing second face card from set: " + set.getCode() + " - " + set.getName() + " - main: " + card.getName() + "; second: " + secondCard.getName());
+                    }
+                }
+            }
+        }
+
+        printMessages(errorsList);
+        if (errorsList.size() > 0) {
+            Assert.fail("Found missing second side cards in sets, errors: " + errorsList.size());
+        }
+    }
+
+    @Test
+    @Ignore // TODO: enable after all missing cards and settings fixes
+    public void test_checkWrongCardsDataInSets() {
+        Collection<String> errorsList = new ArrayList<>();
+        Collection<String> warningsList = new ArrayList<>();
+        Collection<ExpansionSet> xmageSets = Sets.getInstance().values();
+        Set<String> foundedJsonCards = new HashSet<>();
+
+        // CHECK: wrong card numbers
+        for (ExpansionSet set : xmageSets) {
+            if (skipListHaveName(SKIP_LIST_WRONG_CARD_NUMBERS, set.getCode())) {
+                continue;
+            }
+
+            for (ExpansionSet.SetCardInfo card : set.getSetCardInfo()) {
+                MtgJsonCard jsonCard = MtgJsonService.cardFromSet(set.getCode(), card.getName(), card.getCardNumber());
+                if (jsonCard == null) {
+                    // see convertMtgJsonToXmageCardNumber for card number convert notation
+                    errorsList.add("Error: unknown card number, use standard number notations: "
+                            + set.getCode() + " - " + set.getName() + " - " + card.getName() + " - " + card.getCardNumber());
+                    continue;
+                }
+
+                // index for missing cards
+                String code = MtgJsonService.xMageToMtgJsonCodes.getOrDefault(set.getCode(), set.getCode()) + " - " + jsonCard.getRealCardName() + " - " + jsonCard.number;
+                foundedJsonCards.add(code);
+
+                // CHECK: must use full art setting
+                if (jsonCard.isFullArt && !card.isFullArt()) {
+                    errorsList.add("Error: card must use full art setting: "
+                            + set.getCode() + " - " + set.getName() + " - " + card.getName() + " - " + card.getCardNumber());
+                }
+
+                // CHECK: must not use full art setting
+                if (!jsonCard.isFullArt && card.isFullArt()) {
+                    errorsList.add("Error: card must NOT use full art setting: "
+                            + set.getCode() + " - " + set.getName() + " - " + card.getName() + " - " + card.getCardNumber());
+                }
+            }
+        }
+
+        // CHECK: missing cards from set
+        for (MtgJsonSet jsonSet : MtgJsonService.sets().values()) {
+            if (skipListHaveName(SKIP_LIST_UNSUPPORTED_SETS, jsonSet.code)
+                    || skipListHaveName(SKIP_LIST_WRONG_CARD_NUMBERS, jsonSet.code)) {
+                continue;
+            }
+
+            ExpansionSet xmageSet = Sets.findSet(jsonSet.code);
+            if (xmageSet == null) {
+                warningsList.add("Warning: found un-implemented set from mtgjson database: " + jsonSet.code + " - " + jsonSet.name + " - " + jsonSet.releaseDate);
+                continue;
+            }
+
+            for (MtgJsonCard jsonCard : jsonSet.cards) {
+                String code = jsonSet.code + " - " + jsonCard.getRealCardName() + " - " + jsonCard.number;
+                if (!foundedJsonCards.contains(code)) {
+                    if (CardRepository.instance.findCard(jsonCard.getRealCardName()) == null) {
+                        // ignore non-implemented cards
+                        continue;
+                    }
+                    errorsList.add("Error: missing card from xmage's set: " + jsonSet.code + " - " + jsonCard.getRealCardName() + " - " + jsonCard.number);
+                }
+            }
+        }
+
+        printMessages(warningsList);
+        printMessages(errorsList);
+        if (errorsList.size() > 0) {
+            Assert.fail("Found wrong cards data in sets, errors: " + errorsList.size());
+        }
+    }
+
+    @Test
+    @Ignore // TODO: enable after all missing cards and settings fixes
+    public void test_checkMissingScryfallSettingsAndCardNumbers() {
         Collection<String> errorsList = new ArrayList<>();
 
         Collection<ExpansionSet> xmageSets = Sets.getInstance().values();
         Set<String> scryfallSets = ScryfallImageSupportCards.getSupportedSets();
 
-        // missing
+        // CHECK: missing sets in supported list
         for (ExpansionSet set : xmageSets) {
-            if (skipListHaveName(SKIP_LIST_SCRYFALL_DOWNLOAD_SETS, set.getCode()))
+            if (skipListHaveName(SKIP_LIST_SCRYFALL_DOWNLOAD_SETS, set.getCode())) {
                 continue;
+            }
 
             if (!scryfallSets.contains(set.getCode())) {
                 errorsList.add("Error: scryfall download missing setting: " + set.getCode() + " - " + set.getName());
             }
         }
 
-        // unknown
+        // CHECK: unknown sets in supported list
         for (String scryfallCode : scryfallSets) {
             if (xmageSets.stream().noneMatch(e -> e.getCode().equals(scryfallCode))) {
                 errorsList.add("Error: scryfall download unknown setting: " + scryfallCode);
+            }
+        }
+
+        // card numbers
+        // all cards with non-ascii numbers must be downloaded by direct links (api)
+        Set<String> foundedDirectDownloadKeys = new HashSet<>();
+        for (ExpansionSet set : xmageSets) {
+            if (skipListHaveName(SKIP_LIST_SCRYFALL_DOWNLOAD_SETS, set.getCode())
+                    || skipListHaveName(SKIP_LIST_WRONG_CARD_NUMBERS, set.getCode())) {
+                continue;
+            }
+
+            for (ExpansionSet.SetCardInfo card : set.getSetCardInfo()) {
+                MtgJsonCard jsonCard = MtgJsonService.cardFromSet(set.getCode(), card.getName(), card.getCardNumber());
+                if (jsonCard == null) {
+                    // see convertMtgJsonToXmageCardNumber for card number convert notation
+                    errorsList.add("Error: scryfall download can't find card from mtgjson " + set.getCode() + " - " + set.getName() + " - " + card.getName() + " - " + card.getCardNumber());
+                    continue;
+                }
+
+                // CHECK: non-ascii numbers and direct download list
+                if (!CharMatcher.ascii().matchesAllOf(jsonCard.number)) {
+                    // non-ascii numbers
+                    // xmage card numbers can't have non-ascii numbers (it checked by test_checkMissingCardData)
+                    String key = ScryfallImageSupportCards.findDirectDownloadKey(set.getCode(), card.getName(), card.getCardNumber());
+                    if (key != null) {
+                        foundedDirectDownloadKeys.add(key);
+                    } else {
+                        errorsList.add("Error: scryfall download can't find non-ascii card link in direct download list " + set.getCode() + " - " + set.getName() + " - " + card.getName() + " - " + jsonCard.number);
+                    }
+                }
+            }
+        }
+
+        // CHECK: unknown direct download links
+        for (Map.Entry<String, String> direct : ScryfallImageSupportCards.getDirectDownloadLinks().entrySet()) {
+            // skip custom sets
+            String setCode = ScryfallImageSupportCards.extractSetCodeFromDirectKey(direct.getKey());
+            String cardName = ScryfallImageSupportCards.extractCardNameFromDirectKey(direct.getKey());
+            if (skipListHaveName(SKIP_LIST_SCRYFALL_DOWNLOAD_SETS, setCode)
+                    || skipListHaveName(SKIP_LIST_WRONG_CARD_NUMBERS, setCode)) {
+                continue;
+            }
+
+            // skip non implemented cards list
+            if (CardRepository.instance.findCard(cardName) == null) {
+                continue;
+            }
+
+            if (!foundedDirectDownloadKeys.contains(direct.getKey())) {
+                errorsList.add("Error: scryfall download found unknown direct download link " + direct.getKey() + " - " + direct.getValue());
             }
         }
 
@@ -646,12 +801,7 @@ public class VerifyCardDataTest {
         }
 
         // CHECK: wrong basic lands settings (it's for lands search, not booster construct)
-        Map<String, Boolean> skipLandCheck = new HashMap<>();
         for (ExpansionSet set : sets) {
-            if (skipLandCheck.containsKey(set.getName())) {
-                continue;
-            }
-
             Boolean needLand = set.hasBasicLands();
             Boolean foundedLand = false;
             Map<String, Integer> foundLandsList = new HashMap<>();
@@ -944,7 +1094,6 @@ public class VerifyCardDataTest {
         Reflections reflections = new Reflections("mage.");
         Set<Class<? extends Plane>> planesClassesList = reflections.getSubTypesOf(Plane.class);
 
-
         // 1. correct class name
         for (Class<? extends Plane> planeClass : planesClassesList) {
             if (!planeClass.getName().endsWith("Plane")) {
@@ -984,53 +1133,13 @@ public class VerifyCardDataTest {
         }
     }
 
-    private Set<String> findSourceTokens(Class c) throws IOException {
-        if (!CHECK_SOURCE_TOKENS || BasicLand.class.isAssignableFrom(c)) {
-            return null;
-        }
-        String path = "../Mage.Sets/src/" + c.getName().replace(".", "/") + ".java";
-        try {
-            String source = new String(Files.readAllBytes(Paths.get(path)), StandardCharsets.UTF_8);
-            Matcher matcher = SHORT_JAVA_STRING.matcher(source);
-            Set<String> tokens = new HashSet<>();
-            while (matcher.find()) {
-                tokens.add(matcher.group());
-            }
-            return tokens;
-        } catch (NoSuchFileException e) {
-            System.out.println("failed to read " + path);
-            return null;
-        }
-    }
-
-    private void check(Card card, Set<String> tokens, int cardIndex) {
-        MtgJsonCard ref = MtgJsonService.card(card.getName());
+    private void check(Card card, int cardIndex) {
+        MtgJsonCard ref = MtgJsonService.cardFromSet(card.getExpansionSetCode(), card.getName(), card.getCardNumber());
         if (ref == null) {
             warn(card, "Missing card reference");
             return;
         }
         checkAll(card, ref, cardIndex);
-        if (tokens != null) {
-            MtgJsonCard ref2 = null;
-            if (card.isFlipCard()) {
-                ref2 = MtgJsonService.card(card.getFlipCardName());
-            }
-            for (String token : tokens) {
-                if (!(token.equals(card.getName())
-                        || containsInTypesOrText(ref, token)
-                        || containsInTypesOrText(ref, token.toLowerCase(Locale.ENGLISH))
-                        || (ref2 != null && (containsInTypesOrText(ref2, token) || containsInTypesOrText(ref2, token.toLowerCase(Locale.ENGLISH)))))) {
-                    System.out.println("unexpected token " + token + " in " + card);
-                }
-            }
-        }
-    }
-
-    private boolean containsInTypesOrText(MtgJsonCard ref, String token) {
-        return contains(ref.types, token)
-                || contains(ref.subtypes, token)
-                || contains(ref.supertypes, token)
-                || ref.text.contains(token);
     }
 
     private boolean contains(Collection<String> options, String value) {
@@ -1044,7 +1153,6 @@ public class VerifyCardDataTest {
         checkSupertypes(card, ref);
         checkTypes(card, ref);
         checkColors(card, ref);
-        //checkNumbers(card, ref); // TODO: load data from AllPrintings.json and check it (allcards.json do not have card numbers)
         checkBasicLands(card, ref);
         checkMissingAbilities(card, ref);
         checkWrongSymbolsInRules(card);
@@ -1205,7 +1313,6 @@ public class VerifyCardDataTest {
         // replace special text and symbols
         newRule = newRule
                 .replace("{this}", cardName)
-                .replace("{source}", cardName)
                 .replace("−", "-")
                 .replace("—", "-")
                 .replace("&mdash;", "-");
@@ -1248,7 +1355,7 @@ public class VerifyCardDataTest {
     }
 
 
-        /*
+    /*
         for(String rule : card.getRules()) {
             rule = rule.replaceAll("(?i)<i>.+</i>", ""); // Ignoring reminder text in italic
             // TODO: add Equip {3} checks
@@ -1302,7 +1409,6 @@ public class VerifyCardDataTest {
 
         }
     }*/
-
     private void checkWrongAbilitiesText(Card card, MtgJsonCard ref, int cardIndex) {
         // checks missing or wrong text
         if (!card.getExpansionSetCode().equals(FULL_ABILITIES_CHECK_SET_CODE)) {
@@ -1336,9 +1442,11 @@ public class VerifyCardDataTest {
         boolean isFine = true;
         for (int i = 0; i <= cardRules.length - 1; i++) {
             boolean isAbilityFounded = false;
-            for (String refRule : refRules) {
+            for (int j = 0; j <= refRules.length - 1; j++) {
+                String refRule = refRules[j];
                 if (cardRules[i].equals(refRule)) {
                     cardRules[i] = "+ " + cardRules[i];
+                    refRules[j] = "+ " + refRules[j];
                     isAbilityFounded = true;
                     break;
                 }
@@ -1348,6 +1456,14 @@ public class VerifyCardDataTest {
                 isFine = false;
                 warn(card, "card ability can't be found in ref [" + card.getName() + ": " + cardRules[i] + "]");
                 cardRules[i] = "- " + cardRules[i];
+            }
+        }
+
+        // mark ref rules as unknown
+        for (int j = 0; j <= refRules.length - 1; j++) {
+            String refRule = refRules[j];
+            if (!refRule.startsWith("+ ")) {
+                refRules[j] = "- " + refRules[j];
             }
         }
 
@@ -1364,7 +1480,7 @@ public class VerifyCardDataTest {
             System.out.println("ref:");
             Arrays.sort(refRules);
             for (String s : refRules) {
-                System.out.println("  " + s);
+                System.out.println(s);
             }
 
             System.out.println();
