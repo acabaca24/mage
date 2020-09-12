@@ -3100,15 +3100,6 @@ public abstract class PlayerImpl implements Player, Serializable {
                 }
             }
 
-            // ALTERNATIVE COST from source card (AlternativeCostSourceAbility)
-            for (Ability objectAbility : sourceObject.getAbilities()) {
-                if (objectAbility instanceof AlternativeCostSourceAbility) {
-                    if (objectAbility.getCosts().canPay(copy, copy.getSourceId(), playerId, game)) {
-                        return true;
-                    }
-                }
-            }
-
             // ALTERNATIVE COST FROM dynamic effects
             if (getCastSourceIdWithAlternateMana().contains(copy.getSourceId())) {
                 ManaCosts alternateCosts = getCastSourceIdManaCosts().get(copy.getSourceId());
@@ -3128,7 +3119,9 @@ public abstract class PlayerImpl implements Player, Serializable {
             }
 
             // ALTERNATIVE COST from source card (any AlternativeSourceCosts)
-            return canPlayCardByAlternateCost(game.getCard(ability.getSourceId()), availableMana, copy, game);
+            if (AbilityType.SPELL.equals(ability.getAbilityType())) {
+                return canPlayCardByAlternateCost(game.getCard(ability.getSourceId()), availableMana, copy, game);
+            }
         }
         return false;
     }
@@ -3390,8 +3383,10 @@ public abstract class PlayerImpl implements Player, Serializable {
             getPlayableFromObjectSingle(game, fromZone, adventureCard, adventureCard.getSharedAbilities(game), availableMana, output);
         } else if (object instanceof Card) {
             getPlayableFromObjectSingle(game, fromZone, object, ((Card) object).getAbilities(game), availableMana, output);
+        } else if (object instanceof StackObject) {
+            // spells on stack are processing by Card above, other stack objects must be ignored
         } else {
-            // other things like StackObject or CommandObject
+            // other things like CommandObject
             getPlayableFromObjectSingle(game, fromZone, object, object.getAbilities(), availableMana, output);
         }
 

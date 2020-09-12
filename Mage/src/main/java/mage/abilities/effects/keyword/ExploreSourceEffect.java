@@ -1,6 +1,5 @@
 package mage.abilities.effects.keyword;
 
-import java.util.UUID;
 import mage.abilities.Ability;
 import mage.abilities.effects.OneShotEffect;
 import mage.cards.Card;
@@ -14,8 +13,9 @@ import mage.game.events.GameEvent;
 import mage.game.permanent.Permanent;
 import mage.players.Player;
 
+import java.util.UUID;
+
 /**
- *
  * @author TheElk801, JayDi85
  */
 public class ExploreSourceEffect extends OneShotEffect {
@@ -27,29 +27,19 @@ public class ExploreSourceEffect extends OneShotEffect {
     private static final String RULE_TEXT_HINT = "<i>(Reveal the top card of your library. "
             + "Put that card into your hand if it's a land. Otherwise, put a +1/+1 counter on "
             + "this creature, then put the card back or put it into your graveyard.)</i>";
-    private static final String RULE_TEXT_AGAIN = ", then %s explores again."; //So far the only card that uses this is Jadelight Ranger
 
     public static String getRuleText(boolean showAbilityHint) {
         return getRuleText(showAbilityHint, null);
     }
 
     public static String getRuleText(boolean showAbilityHint, String whosExplores) {
-        return getRuleText(showAbilityHint, whosExplores, (byte) 0);
-    }
-
-    public static String getRuleText(boolean showAbilityHint, String whosExplores, byte numTimesExplored) {
 
         String res = whosExplores;
         if (res == null) {
             res = "it";
         }
 
-        if (numTimesExplored > 0) {
-            res = String.format(RULE_TEXT_AGAIN, res);
-        }
-        else {
-            res += " " + RULE_TEXT_START;
-        }
+        res += " " + RULE_TEXT_START;
 
         if (showAbilityHint) {
             res += " " + RULE_TEXT_HINT;
@@ -59,7 +49,6 @@ public class ExploreSourceEffect extends OneShotEffect {
 
     private String sourceName = "it";
     private boolean showAbilityHint = true;
-    private byte numTimesExplored = 0;
 
     public ExploreSourceEffect() {
         this(true);
@@ -69,22 +58,13 @@ public class ExploreSourceEffect extends OneShotEffect {
         this(showAbilityHint, null);
     }
 
-    public ExploreSourceEffect(boolean showAbilityHint, byte numTimesExplored) {
-        this(showAbilityHint, null, numTimesExplored);
-    }
-
     public ExploreSourceEffect(boolean showAbilityHint, String whosExplores) {
-        this(showAbilityHint, whosExplores, (byte) 0);
-    }
-
-    public ExploreSourceEffect(boolean showAbilityHint, String whosExplores, byte numTimesExplored) {
         super(Outcome.Benefit);
 
+        this.showAbilityHint = showAbilityHint;
         if (whosExplores != null) {
             this.sourceName = whosExplores;
         }
-        this.showAbilityHint = showAbilityHint;
-        this.numTimesExplored = numTimesExplored;
         setText();
     }
 
@@ -92,12 +72,10 @@ public class ExploreSourceEffect extends OneShotEffect {
         super(effect);
         this.showAbilityHint = effect.showAbilityHint;
         this.sourceName = effect.sourceName;
-        this.numTimesExplored = effect.numTimesExplored;
-        setText();
     }
 
     private void setText() {
-        this.staticText = getRuleText(this.showAbilityHint, this.sourceName, this.numTimesExplored);
+        this.staticText = getRuleText(this.showAbilityHint, this.sourceName);
     }
 
     @Override

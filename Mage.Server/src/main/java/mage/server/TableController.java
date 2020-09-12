@@ -681,6 +681,7 @@ public class TableController {
                 Game game = match.getGame();
                 if (game != null) {
                     GameManager.instance.removeGame(game.getId());
+                    // game ended by error, so don't add it to ended stats
                 }
             }
         }
@@ -746,6 +747,7 @@ public class TableController {
 
     public void endTournament(Tournament tournament) {
         table.endTournament();
+        ServerMessagesUtil.instance.incTournamentsEnded();
     }
 
     public MatchOptions getOptions() {
@@ -771,6 +773,8 @@ public class TableController {
             }
         }
         GameManager.instance.removeGame(game.getId());
+        ServerMessagesUtil.instance.incGamesEnded();
+
         try {
             if (!match.hasEnded()) {
                 if (match.getGame() != null && match.getGame().getGameType().isSideboardingAllowed()) {
@@ -971,7 +975,7 @@ public class TableController {
             if (!(table.getState() == TableState.WAITING || table.getState() == TableState.STARTING || table.getState() == TableState.READY_TO_START)) {
                 if (match == null) {
                     logger.warn("- Match table with no match:");
-                    logger.warn("-- matchId:" + match.getId() + " , table : " + table.getId());
+                    logger.warn("-- match: null , table : " + table.getId());
                     // return false;
                 } else if (match.isDoneSideboarding() && match.getGame() == null) {
                     // no sideboarding and not active game -> match seems to hang (maybe the Draw bug)

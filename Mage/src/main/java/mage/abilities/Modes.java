@@ -1,6 +1,6 @@
 package mage.abilities;
 
-import java.util.*;
+import mage.abilities.condition.common.KickedCondition;
 import mage.abilities.costs.OptionalAdditionalModeSourceCosts;
 import mage.cards.Card;
 import mage.constants.Outcome;
@@ -11,6 +11,8 @@ import mage.game.Game;
 import mage.players.Player;
 import mage.target.common.TargetOpponent;
 import mage.util.RandomUtil;
+
+import java.util.*;
 
 /**
  * @author BetaSteward_at_googlemail.com
@@ -35,6 +37,9 @@ public class Modes extends LinkedHashMap<UUID, Mode> {
     private Filter maxModesFilter = null; // calculates the max number of available modes
     private boolean isRandom = false;
     private String chooseText = null;
+    private boolean allWhenKicked = false;
+    private boolean resetEachTurn = false;
+    private int turnNum = 0;
 
     public Modes() {
         this.currentMode = new Mode();
@@ -68,6 +73,9 @@ public class Modes extends LinkedHashMap<UUID, Mode> {
 
         this.isRandom = modes.isRandom;
         this.chooseText = modes.chooseText;
+        this.allWhenKicked = modes.allWhenKicked;
+        this.resetEachTurn = modes.resetEachTurn;
+        this.turnNum = modes.turnNum;
         if (modes.getSelectedModes().isEmpty()) {
             this.currentMode = values().iterator().next();
         } else {
@@ -214,6 +222,21 @@ public class Modes extends LinkedHashMap<UUID, Mode> {
     }
 
     public boolean choose(Game game, Ability source) {
+        if (this.isResetEachTurn()) {
+            if (this.turnNum != game.getTurnNum()) {
+                this.clearAlreadySelectedModes(source, game);
+                this.turnNum = game.getTurnNum();
+            }
+        }
+        if (this.allWhenKicked) {
+            if (KickedCondition.instance.apply(game, source)) {
+                this.setMinModes(0);
+                this.setMaxModes(3);
+            } else {
+                this.setMinModes(1);
+                this.setMaxModes(1);
+            }
+        }
         if (this.size() > 1) {
             this.clearSelectedModes();
             if (this.isRandom) {
@@ -325,6 +348,13 @@ public class Modes extends LinkedHashMap<UUID, Mode> {
         }
     }
 
+    private void clearAlreadySelectedModes(Ability source, Game game) {
+        for (UUID modeId : getSelectedModes()) {
+            String key = getKey(source, game, modeId);
+            game.getState().setValue(key, false);
+        }
+    }
+
     /**
      * Adds a mode as selected. If the mode is already selected, it copies the
      * mode and adds it to the duplicate modes
@@ -404,6 +434,8 @@ public class Modes extends LinkedHashMap<UUID, Mode> {
         StringBuilder sb = new StringBuilder();
         if (this.chooseText != null) {
             sb.append(chooseText);
+        } else if (this.allWhenKicked) {
+            sb.append("choose one. If this spell was kicked, choose any number instead.");
         } else if (this.getMaxModesFilter() != null) {
             sb.append("choose one or more. Each mode must target ").append(getMaxModesFilter().getMessage());
         } else if (this.getMinModes() == 0 && this.getMaxModes() == 1) {
@@ -426,6 +458,9 @@ public class Modes extends LinkedHashMap<UUID, Mode> {
 
         if (isEachModeOnlyOnce()) {
             sb.append(" that hasn't been chosen");
+        }
+        if (isResetEachTurn()) {
+            sb.append(" this turn");
         }
 
         if (isEachModeMoreThanOnce()) {
@@ -474,6 +509,18 @@ public class Modes extends LinkedHashMap<UUID, Mode> {
 
     public void setRandom(boolean isRandom) {
         this.isRandom = isRandom;
+    }
+
+    public void setAllWhenKicked(boolean allWhenKicked) {
+        this.allWhenKicked = allWhenKicked;
+    }
+
+    public boolean isResetEachTurn() {
+        return resetEachTurn;
+    }
+
+    public void setResetEachTurn(boolean resetEachTurn) {
+        this.resetEachTurn = resetEachTurn;
     }
 
     public void setChooseText(String chooseText) {
