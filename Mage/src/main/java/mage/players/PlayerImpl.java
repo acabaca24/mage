@@ -343,6 +343,7 @@ public abstract class PlayerImpl implements Player, Serializable {
                 ? player.getSacrificeCostFilter().copy() : null;
         this.loseByZeroOrLessLife = player.canLoseByZeroOrLessLife();
         this.canPlayCardsFromGraveyard = player.canPlayCardsFromGraveyard();
+        this.alternativeSourceCosts.clear();
         this.alternativeSourceCosts.addAll(player.getAlternativeSourceCosts());
 
         this.topCardRevealed = player.isTopCardRevealed();
@@ -356,6 +357,7 @@ public abstract class PlayerImpl implements Player, Serializable {
         this.reachedNextTurnAfterLeaving = player.hasReachedNextTurnAfterLeaving();
 
         this.clearCastSourceIdManaCosts();
+        this.castSourceIdWithAlternateMana.clear();
         this.castSourceIdWithAlternateMana.addAll(player.getCastSourceIdWithAlternateMana());
         for (Entry<UUID, ManaCosts<ManaCost>> entry : player.getCastSourceIdManaCosts().entrySet()) {
             this.castSourceIdManaCosts.put(entry.getKey(), (entry.getValue() == null ? null : entry.getValue().copy()));
@@ -1376,11 +1378,11 @@ public abstract class PlayerImpl implements Player, Serializable {
 
     protected boolean specialAction(SpecialAction action, Game game) {
         //20091005 - 114
-        if (!game.replaceEvent(GameEvent.getEvent(GameEvent.EventType.ACTIVATE_ABILITY,
+        if (!game.replaceEvent(GameEvent.getEvent(GameEvent.EventType.TAKE_SPECIAL_ACTION,
                 action.getId(), action.getSourceId(), getId()))) {
             int bookmark = game.bookmarkState();
             if (action.activate(game, false)) {
-                game.fireEvent(GameEvent.getEvent(GameEvent.EventType.ACTIVATED_ABILITY,
+                game.fireEvent(GameEvent.getEvent(GameEvent.EventType.TAKEN_SPECIAL_ACTION,
                         action.getId(), action.getSourceId(), getId()));
                 if (!game.isSimulation()) {
                     game.informPlayers(getLogName() + action.getGameLogMessage(game));
@@ -1395,7 +1397,29 @@ public abstract class PlayerImpl implements Player, Serializable {
         }
         return false;
     }
-
+    
+    protected boolean specialManaPayment(SpecialAction action, Game game) {
+        //20091005 - 114
+        if (!game.replaceEvent(GameEvent.getEvent(GameEvent.EventType.TAKE_SPECIAL_MANA_PAYMENT,
+                action.getId(), action.getSourceId(), getId()))) {
+            int bookmark = game.bookmarkState();
+            if (action.activate(game, false)) {
+                game.fireEvent(GameEvent.getEvent(GameEvent.EventType.TAKEN_SPECIAL_MANA_PAYMENT,
+                        action.getId(), action.getSourceId(), getId()));
+                if (!game.isSimulation()) {
+                    game.informPlayers(getLogName() + action.getGameLogMessage(game));
+                }
+                if (action.resolve(game)) {
+                    game.removeBookmark(bookmark);
+                    resetStoredBookmark(game);
+                    return true;
+                }
+            }
+            restoreState(bookmark, action.getRule(), game);
+        }
+        return false;
+    }
+    
     @Override
     public boolean activateAbility(ActivatedAbility ability, Game game) {
         if (ability == null) {
@@ -1442,6 +1466,9 @@ public abstract class PlayerImpl implements Player, Serializable {
             switch (ability.getAbilityType()) {
                 case SPECIAL_ACTION:
                     result = specialAction((SpecialAction) ability.copy(), game);
+                    break;
+                case SPECIAL_MANA_PAYMENT:
+                    result = specialManaPayment((SpecialAction) ability.copy(), game);
                     break;
                 case MANA:
                     result = playManaAbility((ActivatedManaAbilityImpl) ability.copy(), game);

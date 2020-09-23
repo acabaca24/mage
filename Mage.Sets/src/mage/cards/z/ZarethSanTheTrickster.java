@@ -33,7 +33,7 @@ import java.util.UUID;
  */
 public final class ZarethSanTheTrickster extends CardImpl {
 
-    private static final FilterControlledPermanent filter = new FilterControlledPermanent(SubType.ROGUE, "unblocked attacking Rogue you control");
+    private static final FilterControlledPermanent filter = new FilterControlledPermanent(SubType.ROGUE, "an unblocked attacking Rogue you control");
 
     static {
         filter.add(UnblockedPredicate.instance);
@@ -139,7 +139,7 @@ class ZarethSanTheTricksterTriggeredAbility extends TriggeredAbilityImpl {
             return false;
         }
         FilterCard filter = new FilterPermanentCard(
-                "nonland permanent in " + opponent.getLogName() + "'s graveyard"
+                "permanent card in " + opponent.getLogName() + "'s graveyard"
         );
         filter.add(new OwnerIdPredicate(opponent.getId()));
         this.getTargets().clear();

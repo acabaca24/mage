@@ -20,6 +20,7 @@ import mage.cards.CardImpl;
 import mage.cards.CardSetInfo;
 import mage.constants.*;
 import mage.filter.FilterPermanent;
+import mage.filter.StaticFilters;
 import mage.filter.common.FilterCreaturePermanent;
 import mage.filter.predicate.Predicates;
 import mage.game.Game;
@@ -54,7 +55,8 @@ public final class NimbleTrapfinder extends CardImpl {
                 new BeginningOfCombatTriggeredAbility(
                         new GainAbilityAllEffect(new DealsCombatDamageToAPlayerTriggeredAbility(
                                 new DrawCardSourceControllerEffect(1), false
-                        ), Duration.EndOfTurn), TargetController.YOU, false
+                        ), Duration.EndOfTurn, StaticFilters.FILTER_CONTROLLED_CREATURES),
+                        TargetController.YOU, false
                 ), FullPartyCondition.instance, "At the beginning of combat on your turn, " +
                 "if you have a full party, creatures you control gain " +
                 "\"Whenever this creature deals combat damage to a player, draw a card\" until end of turn."
@@ -83,7 +85,7 @@ enum NimbleTrapfinderCondition implements Condition {
     @Override
     public boolean apply(Game game, Ability source) {
         NimbleTrapfinderWatcher watcher = game.getState().getWatcher(NimbleTrapfinderWatcher.class);
-        return watcher != null && watcher.checkPlayer(game.getPermanent(source.getSourceId()), game);
+        return watcher != null && watcher.checkPlayer(source.getSourceId(), game);
     }
 
     @Override
@@ -131,9 +133,12 @@ class NimbleTrapfinderWatcher extends Watcher {
         playerMap.clear();
     }
 
-    boolean checkPlayer(Permanent permanent, Game game) {
-        return permanent != null
-                && playerMap
+    boolean checkPlayer(UUID sourceId, Game game) {
+        Permanent permanent = game.getPermanent(sourceId);
+        if (permanent == null) {
+            return !playerMap.computeIfAbsent(game.getOwnerId(sourceId), u -> new HashSet<>()).isEmpty();
+        }
+        return playerMap
                 .computeIfAbsent(permanent.getControllerId(), u -> new HashSet<>())
                 .stream()
                 .anyMatch(mor -> !mor.refersTo(permanent, game));

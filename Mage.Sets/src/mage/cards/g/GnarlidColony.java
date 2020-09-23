@@ -4,7 +4,6 @@ import mage.MageInt;
 import mage.abilities.common.EntersBattlefieldAbility;
 import mage.abilities.common.SimpleStaticAbility;
 import mage.abilities.condition.common.KickedCondition;
-import mage.abilities.costs.mana.ManaCostsImpl;
 import mage.abilities.effects.common.continuous.GainAbilityAllEffect;
 import mage.abilities.effects.common.counter.AddCountersSourceEffect;
 import mage.abilities.keyword.KickerAbility;
@@ -17,7 +16,6 @@ import mage.constants.SubType;
 import mage.counters.CounterType;
 import mage.filter.FilterPermanent;
 import mage.filter.common.FilterControlledCreaturePermanent;
-import mage.filter.predicate.permanent.CounterPredicate;
 
 import java.util.UUID;
 
@@ -29,7 +27,7 @@ public final class GnarlidColony extends CardImpl {
     private static final FilterPermanent filter = new FilterControlledCreaturePermanent();
 
     static {
-        filter.add(new CounterPredicate(CounterType.P1P1));
+        filter.add(CounterType.P1P1.getPredicate());
     }
 
     public GnarlidColony(UUID ownerId, CardSetInfo setInfo) {
@@ -40,7 +38,7 @@ public final class GnarlidColony extends CardImpl {
         this.toughness = new MageInt(2);
 
         // Kicker {2}{G}
-        this.addAbility(new KickerAbility(new ManaCostsImpl("{2}{G}")));
+        this.addAbility(new KickerAbility("{2}{G}"));
 
         // If Gnarlid Colony was kicked, it enters the battlefield with two +1/+1 counters on it.
         this.addAbility(new EntersBattlefieldAbility(

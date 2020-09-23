@@ -54,7 +54,7 @@ public final class NighthawkScavenger extends CardImpl {
                 new SetPowerSourceEffect(
                         NighthawkScavengerValue.instance, Duration.EndOfGame
                 ).setText("{this}'s power is equal to 1 plus the number of card types among cards in your opponents' graveyards.")
-        ));
+        ).addHint(NighthawkScavengerHint.instance));
     }
 
     private NighthawkScavenger(final NighthawkScavenger card) {
@@ -119,7 +119,7 @@ enum NighthawkScavengerHint implements Hint {
         String message = "" + types.size();
         if (types.size() > 0) {
             message += " (";
-            message += types.stream().reduce((a, b) -> a + ", " + b);
+            message += types.stream().reduce((a, b) -> a + ", " + b).orElse("");
             message += ')';
         }
         return "Card types in opponents' graveyards: " + message;

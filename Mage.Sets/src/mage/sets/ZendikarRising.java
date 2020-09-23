@@ -12,16 +12,11 @@ import java.util.List;
  */
 public final class ZendikarRising extends ExpansionSet {
 
-    private static final List<String> unfinished = Arrays.asList(
-            "Agadeem's Awakening",
+    private static final List<String> unfinishedLand = Arrays.asList(
             "Agadeem, the Undercrypt",
-            "Akoum Warrior",
             "Akoum Teeth",
-            "Bala Ged Recovery",
             "Bala Ged Sanctuary",
-            "Beyeen Veil",
             "Beyeen Coast",
-            "Blackbloom Rogue",
             "Blackbloom Bog",
             "Branchloft Pathway",
             "Boulderloft Pathway",
@@ -31,60 +26,67 @@ public final class ZendikarRising extends ExpansionSet {
             "Murkwater Pathway",
             "Cragcrown Pathway",
             "Timbercrown Pathway",
-            "Emeria's Call",
             "Emeria, Shattered Skyclave",
-            "Glasspool Mimic",
             "Glasspool Shore",
-            "Hagra Mauling",
             "Hagra Broodpit",
-            "Jwari Disruption",
             "Jwari Ruins",
-            "Kabira Takedown",
             "Kabira Plateau",
-            "Kazandu Mammoth",
             "Kazandu Valley",
-            "Kazuul's Fury",
             "Kazuul's Cliffs",
-            "Khalni Ambush",
             "Khalni Territory",
-            "Makindi Stampede",
             "Makindi Mesas",
-            "Malakir Rebirth",
             "Malakir Mire",
             "Needleverge Pathway",
             "Pillarverge Pathway",
-            "Ondu Inversion",
             "Ondu Skyruins",
-            "Pelakka Predation",
             "Pelakka Caverns",
             "Riverglide Pathway",
             "Lavaglide Pathway",
-            "Sea Gate Restoration",
             "Sea Gate, Reborn",
-            "Sejiri Shelter",
             "Sejiri Glacier",
-            "Shatterskull Smashing",
             "Shatterskull, the Hammer Pass",
-            "Silundi Vision",
             "Silundi Isle",
-            "Skyclave Cleric",
             "Skyclave Basilica",
-            "Song-Mad Treachery",
             "Song-Mad Ruins",
-            "Spikefield Hazard",
             "Spikefield Cave",
-            "Tangled Florahedron",
             "Tangled Vale",
-            "Turntimber Symbiosis",
             "Turntimber, Serpentine Wood",
-            "Umara Wizard",
             "Umara Skyfalls",
-            "Valakut Awakening",
             "Valakut Stoneforge",
-            "Vastwood Fortification",
             "Vastwood Thicket",
-            "Zof Consumption",
             "Zof Bloodbog"
+    );
+    private static final List<String> unfinishedNonland = Arrays.asList(
+            "Agadeem's Awakening",
+            "Akoum Warrior",
+            "Bala Ged Recovery",
+            "Beyeen Veil",
+            "Blackbloom Rogue",
+            "Emeria's Call",
+            "Glasspool Mimic",
+            "Hagra Mauling",
+            "Jwari Disruption",
+            "Kabira Takedown",
+            "Kazandu Mammoth",
+            "Kazuul's Fury",
+            "Khalni Ambush",
+            "Makindi Stampede",
+            "Malakir Rebirth",
+            "Ondu Inversion",
+            "Pelakka Predation",
+            "Sea Gate Restoration",
+            "Sejiri Shelter",
+            "Shatterskull Smashing",
+            "Silundi Vision",
+            "Skyclave Cleric",
+            "Song-Mad Treachery",
+            "Spikefield Hazard",
+            "Tangled Florahedron",
+            "Turntimber Symbiosis",
+            "Umara Wizard",
+            "Valakut Awakening",
+            "Vastwood Fortification",
+            "Zof Consumption"
     );
 
     private static final ZendikarRising instance = new ZendikarRising();
@@ -110,6 +112,7 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Adventure Awaits", 177, Rarity.COMMON, mage.cards.a.AdventureAwaits.class));
         cards.add(new SetCardInfo("Agadeem's Awakening", 90, Rarity.MYTHIC, mage.cards.a.AgadeemsAwakening.class));
         cards.add(new SetCardInfo("Agadeem, the Undercrypt", 90, Rarity.MYTHIC, mage.cards.a.AgadeemTheUndercrypt.class));
+        cards.add(new SetCardInfo("Akiri, Fearless Voyager", 220, Rarity.RARE, mage.cards.a.AkiriFearlessVoyager.class));
         cards.add(new SetCardInfo("Akoum Hellhound", 133, Rarity.COMMON, mage.cards.a.AkoumHellhound.class));
         cards.add(new SetCardInfo("Akoum Teeth", 134, Rarity.UNCOMMON, mage.cards.a.AkoumTeeth.class));
         cards.add(new SetCardInfo("Akoum Warrior", 134, Rarity.UNCOMMON, mage.cards.a.AkoumWarrior.class));
@@ -183,12 +186,14 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Fireblade Charger", 139, Rarity.UNCOMMON, mage.cards.f.FirebladeCharger.class));
         cards.add(new SetCardInfo("Fissure Wizard", 140, Rarity.COMMON, mage.cards.f.FissureWizard.class));
         cards.add(new SetCardInfo("Forest", 278, Rarity.LAND, mage.cards.basiclands.Forest.class, FULL_ART_BFZ_VARIOUS));
+        cards.add(new SetCardInfo("Forsaken Monument", 244, Rarity.MYTHIC, mage.cards.f.ForsakenMonument.class));
         cards.add(new SetCardInfo("Ghastly Gloomhunter", 103, Rarity.COMMON, mage.cards.g.GhastlyGloomhunter.class));
         cards.add(new SetCardInfo("Glacial Grasp", 59, Rarity.COMMON, mage.cards.g.GlacialGrasp.class));
         cards.add(new SetCardInfo("Glasspool Mimic", 60, Rarity.RARE, mage.cards.g.GlasspoolMimic.class));
         cards.add(new SetCardInfo("Glasspool Shore", 60, Rarity.RARE, mage.cards.g.GlasspoolShore.class));
         cards.add(new SetCardInfo("Gnarlid Colony", 185, Rarity.COMMON, mage.cards.g.GnarlidColony.class));
         cards.add(new SetCardInfo("Goma Fada Vanguard", 141, Rarity.UNCOMMON, mage.cards.g.GomaFadaVanguard.class));
+        cards.add(new SetCardInfo("Grakmaw, Skyclave Ravager", 223, Rarity.RARE, mage.cards.g.GrakmawSkyclaveRavager.class));
         cards.add(new SetCardInfo("Grimclimb Pathway", 259, Rarity.RARE, mage.cards.g.GrimclimbPathway.class));
         cards.add(new SetCardInfo("Grotag Bug-Catcher", 142, Rarity.COMMON, mage.cards.g.GrotagBugCatcher.class));
         cards.add(new SetCardInfo("Grotag Night-Runner", 143, Rarity.UNCOMMON, mage.cards.g.GrotagNightRunner.class));
@@ -228,7 +233,9 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Kor Celebrant", 22, Rarity.COMMON, mage.cards.k.KorCelebrant.class));
         cards.add(new SetCardInfo("Lavaglide Pathway", 264, Rarity.RARE, mage.cards.l.LavaglidePathway.class));
         cards.add(new SetCardInfo("Legion Angel", 23, Rarity.RARE, mage.cards.l.LegionAngel.class));
+        cards.add(new SetCardInfo("Leyline Tyrant", 147, Rarity.MYTHIC, mage.cards.l.LeylineTyrant.class));
         cards.add(new SetCardInfo("Linvala, Shield of Sea Gate", 226, Rarity.RARE, mage.cards.l.LinvalaShieldOfSeaGate.class));
+        cards.add(new SetCardInfo("Lithoform Blight", 109, Rarity.UNCOMMON, mage.cards.l.LithoformBlight.class));
         cards.add(new SetCardInfo("Living Tempest", 65, Rarity.COMMON, mage.cards.l.LivingTempest.class));
         cards.add(new SetCardInfo("Lotus Cobra", 193, Rarity.RARE, mage.cards.l.LotusCobra.class));
         cards.add(new SetCardInfo("Lullmage's Domination", 66, Rarity.UNCOMMON, mage.cards.l.LullmagesDomination.class));
@@ -252,6 +259,7 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Mind Carver", 113, Rarity.UNCOMMON, mage.cards.m.MindCarver.class));
         cards.add(new SetCardInfo("Mind Drain", 114, Rarity.COMMON, mage.cards.m.MindDrain.class));
         cards.add(new SetCardInfo("Molten Blast", 149, Rarity.COMMON, mage.cards.m.MoltenBlast.class));
+        cards.add(new SetCardInfo("Moraug, Fury of Akoum", 150, Rarity.MYTHIC, mage.cards.m.MoraugFuryOfAkoum.class));
         cards.add(new SetCardInfo("Moss-Pit Skeleton", 228, Rarity.UNCOMMON, mage.cards.m.MossPitSkeleton.class));
         cards.add(new SetCardInfo("Mountain", 275, Rarity.LAND, mage.cards.basiclands.Mountain.class, FULL_ART_BFZ_VARIOUS));
         cards.add(new SetCardInfo("Murasa Brute", 195, Rarity.COMMON, mage.cards.m.MurasaBrute.class));
@@ -268,6 +276,7 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Nimana Skitter-Sneak", 116, Rarity.COMMON, mage.cards.n.NimanaSkitterSneak.class));
         cards.add(new SetCardInfo("Nimana Skydancer", 117, Rarity.COMMON, mage.cards.n.NimanaSkydancer.class));
         cards.add(new SetCardInfo("Nimble Trapfinder", 72, Rarity.RARE, mage.cards.n.NimbleTrapfinder.class));
+        cards.add(new SetCardInfo("Nissa of Shadowed Boughs", 231, Rarity.MYTHIC, mage.cards.n.NissaOfShadowedBoughs.class));
         cards.add(new SetCardInfo("Nissa's Zendikon", 197, Rarity.COMMON, mage.cards.n.NissasZendikon.class));
         cards.add(new SetCardInfo("Nullpriest of Oblivion", 118, Rarity.RARE, mage.cards.n.NullpriestOfOblivion.class));
         cards.add(new SetCardInfo("Oblivion's Hunger", 119, Rarity.COMMON, mage.cards.o.OblivionsHunger.class));
@@ -300,6 +309,7 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Rockslide Sorcerer", 154, Rarity.UNCOMMON, mage.cards.r.RockslideSorcerer.class));
         cards.add(new SetCardInfo("Roil Eruption", 155, Rarity.COMMON, mage.cards.r.RoilEruption.class));
         cards.add(new SetCardInfo("Roiling Regrowth", 201, Rarity.UNCOMMON, mage.cards.r.RoilingRegrowth.class));
+        cards.add(new SetCardInfo("Roiling Vortex", 156, Rarity.RARE, mage.cards.r.RoilingVortex.class));
         cards.add(new SetCardInfo("Roost of Drakes", 74, Rarity.UNCOMMON, mage.cards.r.RoostOfDrakes.class));
         cards.add(new SetCardInfo("Ruin Crab", 75, Rarity.UNCOMMON, mage.cards.r.RuinCrab.class));
         cards.add(new SetCardInfo("Scale the Heights", 202, Rarity.COMMON, mage.cards.s.ScaleTheHeights.class));
@@ -327,6 +337,7 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Silundi Isle", 80, Rarity.UNCOMMON, mage.cards.s.SilundiIsle.class));
         cards.add(new SetCardInfo("Silundi Vision", 80, Rarity.UNCOMMON, mage.cards.s.SilundiVision.class));
         cards.add(new SetCardInfo("Sizzling Barrage", 162, Rarity.COMMON, mage.cards.s.SizzlingBarrage.class));
+        cards.add(new SetCardInfo("Skyclave Apparition", 39, Rarity.RARE, mage.cards.s.SkyclaveApparition.class));
         cards.add(new SetCardInfo("Skyclave Basilica", 40, Rarity.UNCOMMON, mage.cards.s.SkyclaveBasilica.class));
         cards.add(new SetCardInfo("Skyclave Cleric", 40, Rarity.UNCOMMON, mage.cards.s.SkyclaveCleric.class));
         cards.add(new SetCardInfo("Skyclave Geopede", 163, Rarity.UNCOMMON, mage.cards.s.SkyclaveGeopede.class));
@@ -357,6 +368,7 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Swamp", 272, Rarity.LAND, mage.cards.basiclands.Swamp.class, FULL_ART_BFZ_VARIOUS));
         cards.add(new SetCardInfo("Swarm Shambler", 207, Rarity.RARE, mage.cards.s.SwarmShambler.class));
         cards.add(new SetCardInfo("Synchronized Spellcraft", 168, Rarity.COMMON, mage.cards.s.SynchronizedSpellcraft.class));
+        cards.add(new SetCardInfo("Taborax, Hope's Demise", 129, Rarity.RARE, mage.cards.t.TaboraxHopesDemise.class));
         cards.add(new SetCardInfo("Tajuru Blightblade", 208, Rarity.COMMON, mage.cards.t.TajuruBlightblade.class));
         cards.add(new SetCardInfo("Tajuru Paragon", 209, Rarity.RARE, mage.cards.t.TajuruParagon.class));
         cards.add(new SetCardInfo("Tajuru Snarecaster", 210, Rarity.COMMON, mage.cards.t.TajuruSnarecaster.class));
@@ -377,11 +389,14 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Tormenting Voice", 172, Rarity.COMMON, mage.cards.t.TormentingVoice.class));
         cards.add(new SetCardInfo("Tuktuk Rubblefort", 173, Rarity.COMMON, mage.cards.t.TuktukRubblefort.class));
         cards.add(new SetCardInfo("Turntimber Ascetic", 214, Rarity.COMMON, mage.cards.t.TurntimberAscetic.class));
+        cards.add(new SetCardInfo("Turntimber Symbiosis", 215, Rarity.MYTHIC, mage.cards.t.TurntimberSymbiosis.class));
+        cards.add(new SetCardInfo("Turntimber, Serpentine Wood", 215, Rarity.MYTHIC, mage.cards.t.TurntimberSerpentineWood.class));
         cards.add(new SetCardInfo("Umara Mystic", 238, Rarity.UNCOMMON, mage.cards.u.UmaraMystic.class));
         cards.add(new SetCardInfo("Umara Skyfalls", 86, Rarity.UNCOMMON, mage.cards.u.UmaraSkyfalls.class));
         cards.add(new SetCardInfo("Umara Wizard", 86, Rarity.UNCOMMON, mage.cards.u.UmaraWizard.class));
         cards.add(new SetCardInfo("Utility Knife", 256, Rarity.COMMON, mage.cards.u.UtilityKnife.class));
         cards.add(new SetCardInfo("Valakut Awakening", 174, Rarity.RARE, mage.cards.v.ValakutAwakening.class));
+        cards.add(new SetCardInfo("Valakut Exploration", 175, Rarity.RARE, mage.cards.v.ValakutExploration.class));
         cards.add(new SetCardInfo("Valakut Stoneforge", 174, Rarity.RARE, mage.cards.v.ValakutStoneforge.class));
         cards.add(new SetCardInfo("Vanquish the Weak", 131, Rarity.COMMON, mage.cards.v.VanquishTheWeak.class));
         cards.add(new SetCardInfo("Vastwood Fortification", 216, Rarity.UNCOMMON, mage.cards.v.VastwoodFortification.class));
@@ -398,6 +413,15 @@ public final class ZendikarRising extends ExpansionSet {
         cards.add(new SetCardInfo("Zof Consumption", 132, Rarity.UNCOMMON, mage.cards.z.ZofConsumption.class));
         cards.add(new SetCardInfo("Zulaport Duelist", 88, Rarity.COMMON, mage.cards.z.ZulaportDuelist.class));
 
-        cards.removeIf(setCardInfo -> unfinished.contains(setCardInfo.getName())); // remove when mechanics are fully implemented
+        cards.removeIf(setCardInfo -> checkName(setCardInfo.getName())); // remove when mechanics are fully implemented
+    }
+
+    private static boolean checkName(String name) {
+        boolean keepNonland = false;
+        keepNonland = true; // comment out this line to test front faces of MDFCs
+        if (keepNonland && unfinishedNonland.contains(name)) {
+            return true;
+        }
+        return unfinishedLand.contains(name);
     }
 }
