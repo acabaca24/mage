@@ -60,7 +60,7 @@ class WhispersteelDaggerCastFromExileEffect extends AsThoughEffectImpl {
 
     WhispersteelDaggerCastFromExileEffect() {
         super(AsThoughEffectType.PLAY_FROM_NOT_OWN_HAND_ZONE, Duration.EndOfTurn, Outcome.Benefit);
-        staticText = "you may cast a creature spell from that player's graveyard this turn, and";
+        staticText = "you may cast a creature spell from that player's graveyard this turn";
     }
 
     private WhispersteelDaggerCastFromExileEffect(final WhispersteelDaggerCastFromExileEffect effect) {
@@ -95,7 +95,8 @@ class WhispersteelDaggerCastFromExileEffect extends AsThoughEffectImpl {
         WhispersteelDaggerWatcher watcher = game.getState().getWatcher(WhispersteelDaggerWatcher.class);
         if (watcher == null || !watcher.checkPermission(
                 affectedControllerId, targetId, source, game
-        ) || game.getState().getZone(sourceId) != Zone.GRAVEYARD) {
+        ) || (game.getState().getZone(sourceId) != Zone.GRAVEYARD
+                && game.getState().getZone(sourceId) != Zone.STACK)) {
             return false;
         }
         Card card = game.getCard(sourceId);
@@ -109,8 +110,8 @@ class WhispersteelDaggerCastFromExileEffect extends AsThoughEffectImpl {
 class WhispersteelDaggerSpendAnyManaEffect extends AsThoughEffectImpl implements AsThoughManaEffect {
 
     WhispersteelDaggerSpendAnyManaEffect() {
-        super(AsThoughEffectType.SPEND_OTHER_MANA, Duration.Custom, Outcome.Benefit);
-        staticText = "you may spend mana as though it were mana of any color to cast that spell";
+        super(AsThoughEffectType.SPEND_OTHER_MANA, Duration.EndOfTurn, Outcome.Benefit);
+        staticText = ", and you may spend mana as though it were mana of any color to cast that spell";
     }
 
     private WhispersteelDaggerSpendAnyManaEffect(final WhispersteelDaggerSpendAnyManaEffect effect) {
